@@ -1,0 +1,27 @@
+{
+  "name": "matt-hardenburg.github.io",
+  "version": "0.0.1",
+  "description": "My interactive resume/portfolio website.",
+  "main": "./dist/js/main.js",
+  "scripts": {
+    "build-ts": "tsc",
+    "build-css": "sass src/scss:dist/css",
+    "build": "npm run build-ts && npm run build-css",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/matt-hardenburg/matt-hardenburg.github.io.git"
+  },
+  "author": "Matthew Hardenburg",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/matt-hardenburg/matt-hardenburg.github.io/issues"
+  },
+  "homepage": "https://github.com/matt-hardenburg/matt-hardenburg.github.io#readme",
+  "dependencies": {
+    "sass": "^1.77.8",
+    "tsc": "^2.0.4",
+    "typescript": "^5.5.4"
+  }
+}
