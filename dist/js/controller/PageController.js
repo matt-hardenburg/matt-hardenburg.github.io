@@ -8,30 +8,18 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 //PageController.ts
-import { PageModel } from "../model/PageModel.js";
-import { PageView } from "../view/PageView.js";
+import { PageModelProxy } from "../model/PageModel/PageModelProxy.js";
+import { PageViewProxy } from "../view/PageView/PageViewProxy.js";
 export class PageController {
     constructor() {
-        this.pageCache = {};
         this.rootID = 'root';
-        this.pageView = new PageView(this.rootID);
+        this.modelProxy = PageModelProxy.getInstance();
+        this.viewProxy = PageViewProxy.getInstance();
     }
     static getInstance() {
         if (!PageController.instance)
-            PageController.instance = new PageController;
+            PageController.instance = new PageController();
         return PageController.instance;
-    }
-    preloadTemplates(templates) {
-        return __awaiter(this, void 0, void 0, function* () {
-            templates.forEach((element) => __awaiter(this, void 0, void 0, function* () {
-                const response = yield fetch(`./src/templates/pages/${element}.html`);
-                if (response.ok)
-                    this.pageCache[element] = new PageModel(element, yield response.text());
-            }));
-        });
-    }
-    getPageTemplates() {
-        return this.pageCache;
     }
     initialPageLoad() {
         const lastVisitedPage = sessionStorage.getItem("lastVisitedPage"); //retrieve last visited page id from session storage
@@ -42,28 +30,25 @@ export class PageController {
     }
     loadPageTemplate(templateName) {
         return __awaiter(this, void 0, void 0, function* () {
-            if (!this.pageView.getRootDiv())
+            if (!this.viewProxy.getRootDiv())
                 throw Error(`<div ${this.rootID}></div> is null`);
-            //attempt content swap
-            try {
-                let model;
-                if (this.pageCache[templateName])
-                    model = this.pageCache[templateName];
-                else //content not pre-loaded
-                 {
-                    const response = yield fetch(`./src/templates/pages/${templateName}.html`);
-                    model = new PageModel(templateName, yield response.text());
-                    this.pageCache[templateName] = model;
+            var viewsReady = false, modelsReady = false;
+            yield this.viewProxy.validateViews().then((result) => { viewsReady = result; });
+            yield this.modelProxy.validateModels().then((result) => { modelsReady = result; });
+            if (viewsReady && modelsReady) {
+                //attempt content swap
+                try {
+                    this.viewProxy.render(this.modelProxy.loadModel(templateName));
                 }
-                //swap content
-                this.pageView.render(model);
+                catch (e) {
+                    if (e instanceof Error)
+                        console.error(e.message);
+                    else
+                        throw Error("Can't handle error");
+                }
             }
-            catch (e) {
-                if (e instanceof Error)
-                    console.error(e.message);
-                else
-                    throw Error("Can't handle error");
-            }
+            else
+                throw Error(`Attempted content swap before models(${modelsReady}) and/or views(${viewsReady}) were ready`);
         });
     }
     linkNavbarButtons() {
