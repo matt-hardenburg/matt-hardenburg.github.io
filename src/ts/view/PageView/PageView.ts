@@ -1,16 +1,15 @@
 import { PageController } from "../../controller/PageController.js";
+import { sessionMarkers } from "../../main.js";
 import { PageModel } from "../../model/PageModel/PageModel.js";
 
 //PageView.ts
 export interface PageViewIF
 {
     render(model: PageModel): void;
-    getModel() : PageModel;
 }
 
 export abstract class PageView implements PageViewIF
 {
-    //protected pageController: PageController = PageController.getInstance();
     protected rootDiv: HTMLElement = document.getElementById('root') as HTMLElement;
 
     constructor(){}
@@ -20,7 +19,7 @@ export abstract class PageView implements PageViewIF
         this.rootDiv.classList.add('fade-out'); //fade current content
 
         setTimeout(async () => {
-            document.title = `Matthew Hardenburg - ${model.getTitle()}`;
+            document.title = `${model.getTitle()}`;
             this.rootDiv.innerHTML = model.getContent();
 
             if (!(!!document.getElementById('navbar'))) 
@@ -38,17 +37,13 @@ export abstract class PageView implements PageViewIF
         }, 500);
     }
 
-    public abstract getModel(): PageModel;
-
-    protected updatePageMarker() {
+    protected updatePageMarker() 
+    {
         const contentElement: HTMLElement = this.rootDiv!.firstElementChild as HTMLElement;
-        if (!contentElement) {
-            console.error("Content element is null or not properly rendered.");
-            return;
-        }
+        if (!contentElement) throw Error("Content element is null or not properly rendered.");
 
         const pageID: string | undefined = contentElement.dataset.page;
-        if (pageID) sessionStorage.setItem('lastVisitedPage', pageID);
-        else throw Error("could not locate page id")
+        if (pageID) sessionStorage.setItem(sessionMarkers.lastVisitedPage, pageID);
+        else sessionStorage.setItem(sessionMarkers.lastVisitedPage, 'home');
     }
 }

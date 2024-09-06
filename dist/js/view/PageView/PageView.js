@@ -8,15 +8,15 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 import { PageController } from "../../controller/PageController.js";
+import { sessionMarkers } from "../../main.js";
 export class PageView {
     constructor() {
-        //protected pageController: PageController = PageController.getInstance();
         this.rootDiv = document.getElementById('root');
     }
     render(model) {
         this.rootDiv.classList.add('fade-out'); //fade current content
         setTimeout(() => __awaiter(this, void 0, void 0, function* () {
-            document.title = `Matthew Hardenburg - ${model.getTitle()}`;
+            document.title = `${model.getTitle()}`;
             this.rootDiv.innerHTML = model.getContent();
             if (!(!!document.getElementById('navbar'))) {
                 var rootContent = this.rootDiv.innerHTML;
@@ -33,14 +33,12 @@ export class PageView {
     }
     updatePageMarker() {
         const contentElement = this.rootDiv.firstElementChild;
-        if (!contentElement) {
-            console.error("Content element is null or not properly rendered.");
-            return;
-        }
+        if (!contentElement)
+            throw Error("Content element is null or not properly rendered.");
         const pageID = contentElement.dataset.page;
         if (pageID)
-            sessionStorage.setItem('lastVisitedPage', pageID);
+            sessionStorage.setItem(sessionMarkers.lastVisitedPage, pageID);
         else
-            throw Error("could not locate page id");
+            sessionStorage.setItem(sessionMarkers.lastVisitedPage, 'home');
     }
 }

@@ -7,29 +7,19 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+//PageController.ts
+import { PageModelProxy } from "../model/PageModel/PageModelProxy.js";
 import { PageViewProxy } from "../view/PageView/PageViewProxy.js";
 export class PageController {
     constructor() {
-        //private viewProxy: PageViewProxy = PageViewProxy.getInstance();
-        this.pageCache = {};
         this.rootID = 'root';
+        this.modelProxy = PageModelProxy.getInstance();
+        this.viewProxy = PageViewProxy.getInstance();
     }
     static getInstance() {
         if (!PageController.instance)
             PageController.instance = new PageController();
         return PageController.instance;
-    }
-    preloadTemplates(templates) {
-        return __awaiter(this, void 0, void 0, function* () {
-            templates.forEach((element) => __awaiter(this, void 0, void 0, function* () {
-                const response = yield fetch(`./src/templates/pages/${element}.html`);
-                if (response.ok)
-                    this.pageCache[element] = PageViewProxy.getInstance().getViews()[`${element}`].getModel();
-            }));
-        });
-    }
-    getPageTemplates() {
-        return this.pageCache;
     }
     initialPageLoad() {
         const lastVisitedPage = sessionStorage.getItem("lastVisitedPage"); //retrieve last visited page id from session storage
@@ -40,18 +30,25 @@ export class PageController {
     }
     loadPageTemplate(templateName) {
         return __awaiter(this, void 0, void 0, function* () {
-            if (!PageViewProxy.getInstance().getRootDiv())
+            if (!this.viewProxy.getRootDiv())
                 throw Error(`<div ${this.rootID}></div> is null`);
-            //attempt content swap
-            try {
-                PageViewProxy.getInstance().render(this.pageCache[templateName]);
+            var viewsReady = false, modelsReady = false;
+            yield this.viewProxy.validateViews().then((result) => { viewsReady = result; });
+            yield this.modelProxy.validateModels().then((result) => { modelsReady = result; });
+            if (viewsReady && modelsReady) {
+                //attempt content swap
+                try {
+                    this.viewProxy.render(this.modelProxy.loadModel(templateName));
+                }
+                catch (e) {
+                    if (e instanceof Error)
+                        console.error(e.message);
+                    else
+                        throw Error("Can't handle error");
+                }
             }
-            catch (e) {
-                if (e instanceof Error)
-                    console.error(e.message);
-                else
-                    throw Error("Can't handle error");
-            }
+            else
+                throw Error(`Attempted content swap before models(${modelsReady}) and/or views(${viewsReady}) were ready`);
         });
     }
     linkNavbarButtons() {
@@ -69,8 +66,5 @@ export class PageController {
                     element.addEventListener('click', () => this.loadPageTemplate(button.template));
             });
         });
-    }
-    getPageCache() {
-        return this.pageCache;
     }
 }
