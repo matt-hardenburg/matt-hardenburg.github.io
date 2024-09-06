@@ -1,5 +1,5 @@
 //PageModel.ts
-export class PageModel
+export abstract class PageModel
 {
     private title: string;
     private content: string;

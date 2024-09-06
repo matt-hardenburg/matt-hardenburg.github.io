@@ -7,18 +7,16 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-//PageController.ts
-import { PageModel } from "../model/PageModel.js";
-import { PageView } from "../view/PageView.js";
+import { PageViewProxy } from "../view/PageView/PageViewProxy.js";
 export class PageController {
     constructor() {
+        //private viewProxy: PageViewProxy = PageViewProxy.getInstance();
         this.pageCache = {};
         this.rootID = 'root';
-        this.pageView = new PageView(this.rootID);
     }
     static getInstance() {
         if (!PageController.instance)
-            PageController.instance = new PageController;
+            PageController.instance = new PageController();
         return PageController.instance;
     }
     preloadTemplates(templates) {
@@ -26,7 +24,7 @@ export class PageController {
             templates.forEach((element) => __awaiter(this, void 0, void 0, function* () {
                 const response = yield fetch(`./src/templates/pages/${element}.html`);
                 if (response.ok)
-                    this.pageCache[element] = new PageModel(element, yield response.text());
+                    this.pageCache[element] = PageViewProxy.getInstance().getViews()[`${element}`].getModel();
             }));
         });
     }
@@ -42,21 +40,11 @@ export class PageController {
     }
     loadPageTemplate(templateName) {
         return __awaiter(this, void 0, void 0, function* () {
-            if (!this.pageView.getRootDiv())
+            if (!PageViewProxy.getInstance().getRootDiv())
                 throw Error(`<div ${this.rootID}></div> is null`);
             //attempt content swap
             try {
-                let model;
-                if (this.pageCache[templateName])
-                    model = this.pageCache[templateName];
-                else //content not pre-loaded
-                 {
-                    const response = yield fetch(`./src/templates/pages/${templateName}.html`);
-                    model = new PageModel(templateName, yield response.text());
-                    this.pageCache[templateName] = model;
-                }
-                //swap content
-                this.pageView.render(model);
+                PageViewProxy.getInstance().render(this.pageCache[templateName]);
             }
             catch (e) {
                 if (e instanceof Error)
@@ -81,5 +69,8 @@ export class PageController {
                     element.addEventListener('click', () => this.loadPageTemplate(button.template));
             });
         });
+    }
+    getPageCache() {
+        return this.pageCache;
     }
 }
