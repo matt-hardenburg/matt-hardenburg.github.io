@@ -1,36 +1,24 @@
 //PageController.ts
-import { PageModel } from "../model/PageModel.js";
-import { PageView } from "../view/PageView.js";
+import { PageModelProxy } from "../model/PageModel/PageModelProxy.js";
+import { PageViewProxy } from "../view/PageView/PageViewProxy.js";
 
 export class PageController
 {
     private static instance: PageController;
-    private pageCache: { [key: string]: PageModel } = {};
-    private pageView: PageView;
     private rootID = 'root';
+    private modelProxy: PageModelProxy;
+    private viewProxy: PageViewProxy;
 
-    constructor()
+    constructor() 
     {
-        this.pageView = new PageView(this.rootID);
+        this.modelProxy = PageModelProxy.getInstance();
+        this.viewProxy = PageViewProxy.getInstance();
     }
 
     public static getInstance(): PageController
     {
-        if (!PageController.instance) PageController.instance = new PageController;
+        if (!PageController.instance) PageController.instance = new PageController();
         return PageController.instance;
-    }
-
-    public async preloadTemplates(templates: string[]): Promise<void>
-    {
-        templates.forEach(async element => {
-            const response = await fetch(`./src/templates/pages/${element}.html`);
-            if (response.ok) this.pageCache[element] = new PageModel(element, await response.text());
-        });
-    }
-
-    public getPageTemplates(): {[key: string]: PageModel}
-    {
-        return this.pageCache;
     }
 
     public initialPageLoad(): any 
@@ -42,26 +30,23 @@ export class PageController
 
     public async loadPageTemplate(templateName: string): Promise<void> 
     {
-        if (!this.pageView.getRootDiv()) throw Error(`<div ${this.rootID}></div> is null`);
+        if (!this.viewProxy.getRootDiv()) throw Error(`<div ${this.rootID}></div> is null`);
 
-        //attempt content swap
-        try {
-            let model: PageModel;
-            if (this.pageCache[templateName]) model = this.pageCache[templateName];
-            else //content not pre-loaded
+        var viewsReady: boolean = false, modelsReady: boolean = false;
+        await this.viewProxy.validateViews().then((result) => { viewsReady = result; });
+        await this.modelProxy.validateModels().then((result) => { modelsReady = result; });
+
+        if (viewsReady && modelsReady)
+        {
+            //attempt content swap
+            try { this.viewProxy.render(this.modelProxy.loadModel(templateName)); }
+            catch (e: unknown) 
             {
-                const response: Response = await fetch(`./src/templates/pages/${templateName}.html`);
-                model = new PageModel(templateName, await response.text());
-                this.pageCache[templateName] = model;
+                if (e instanceof Error) console.error(e.message);
+                else throw Error("Can't handle error")
             }
-
-            //swap content
-            this.pageView.render(model);
         }
-        catch (e: unknown) {
-            if (e instanceof Error) console.error(e.message);
-            else throw Error("Can't handle error")
-        }
+        else throw Error(`Attempted content swap before models(${modelsReady}) and/or views(${viewsReady}) were ready`);
     }
 
     public async linkNavbarButtons(): Promise<void> 

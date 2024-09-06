@@ -1,7 +1,10 @@
 //main.ts
 import { PageController } from "./controller/PageController.js";
 
-const pageController: PageController = PageController.getInstance();
+export enum sessionMarkers //to prevent typos
+{
+    lastVisitedPage = 'lastVisitedPage'
+}
 
-pageController.preloadTemplates(["home", "about", "resume", "portfolio", "contact"]);
+const pageController: PageController = PageController.getInstance();
 document.addEventListener('DOMContentLoaded', pageController.initialPageLoad());
