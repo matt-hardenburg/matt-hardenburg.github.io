@@ -26,7 +26,6 @@ export class PageViewProxy extends PageView
     constructor()
     {
         super()
-        this.setActivePage();
     }
 
     private async loadViews(): Promise<void>
@@ -41,9 +40,15 @@ export class PageViewProxy extends PageView
     {
         await this.loadViews()
         var sessionStoragePage: string | null = sessionStorage.getItem(sessionMarkers.lastVisitedPage);
-        if (!this.validateViews()) throw new Error('pageViews not correctly loaded');
+        const valid = await this.validateViews();
+        if (!valid) throw new Error('pageViews not correctly loaded');
         if (!sessionStoragePage) this.activePage = this.pageViews['home'];
         else this.activePage = (this.pageViews[`${sessionStoragePage}`])
+    }
+
+    public async init(): Promise<void>
+    {
+        await this.setActivePage();
     }
 
     public static getInstance(): PageViewProxy
@@ -54,7 +59,8 @@ export class PageViewProxy extends PageView
 
     public getRootDiv(): HTMLElement
     {
-        return this.rootDiv;
+        this.ensureRootDiv();
+        return this.rootDiv as HTMLElement;
     }
 
     public async validateViews(): Promise<boolean>
