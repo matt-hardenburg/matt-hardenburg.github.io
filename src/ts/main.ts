@@ -1,4 +1,5 @@
 //main.ts
+import '../scss/main.scss'
 import { PageController } from "./controller/PageController.js";
 
 export enum sessionMarkers //to prevent typos
@@ -7,4 +8,4 @@ export enum sessionMarkers //to prevent typos
 }
 
 const pageController: PageController = PageController.getInstance();
-document.addEventListener('DOMContentLoaded', pageController.initialPageLoad());
+document.addEventListener('DOMContentLoaded', async () => { await pageController.initialPageLoad(); });

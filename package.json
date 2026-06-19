@@ -4,9 +4,12 @@
   "description": "My interactive resume/portfolio website.",
   "main": "./dist/js/main.js",
   "scripts": {
-    "build-ts": "tsc",
+    "dev": "vite",
+    "build-ts": "node ./node_modules/typescript/bin/tsc",
     "build-css": "sass src/scss:dist/css",
-    "build": "npm run build-ts && npm run build-css",
+    "build": "npm run build-ts && npm run build-css && vite build",
+    "preview": "vite preview",
+    "start": "npx serve .",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -19,9 +22,16 @@
     "url": "https://github.com/matt-hardenburg/matt-hardenburg.github.io/issues"
   },
   "homepage": "https://github.com/matt-hardenburg/matt-hardenburg.github.io#readme",
-  "dependencies": {
+  "devDependencies": {
     "sass": "^1.77.8",
-    "tsc": "^2.0.4",
-    "typescript": "^5.5.4"
+    "typescript": "^5.5.4",
+    "vite": "^5.2.0",
+    "@vitejs/plugin-react": "^5.1.0",
+    "@types/react": "^18.2.28",
+    "@types/react-dom": "^18.2.11"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
   }
 }
